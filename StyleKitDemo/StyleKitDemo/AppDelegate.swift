@@ -18,7 +18,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             StyleKit(fileUrl: styleFile, moduleName: "StyleKitDemo", logLevel: .debug)?.apply()
             
         }
-        
         return true
     }
 
