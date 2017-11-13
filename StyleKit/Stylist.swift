@@ -5,12 +5,12 @@ final class Stylist {
     typealias Style = [String:AnyObject]
     typealias setValueForControlState = @convention(c) (AnyObject, Selector, AnyObject, UInt) -> Void
     
-    let data: Style
-    let aliases: Style
-    let styleParser: StyleParsable
-    let moduleName: String?
-    var currentComponent: AnyClass?
-    var viewStack = [UIAppearanceContainer.Type]()
+    private var data: Style
+    private let aliases: Style
+    private let styleParser: StyleParsable
+    private let moduleName: String?
+    private var currentComponent: AnyClass?
+    private var viewStack = [UIAppearanceContainer.Type]()
     
     init(data: Style, styleParser: StyleParsable?, moduleName: String?) {
         self.styleParser = styleParser ?? StyleParser()
