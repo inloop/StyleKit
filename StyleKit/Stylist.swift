@@ -1,6 +1,6 @@
 import Foundation
 
-class Stylist {
+final class Stylist {
     
     typealias Style = [String:AnyObject]
     typealias setValueForControlState = @convention(c) (AnyObject, Selector, AnyObject, UInt) -> Void

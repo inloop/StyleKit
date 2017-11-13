@@ -1,8 +1,8 @@
 import Foundation
 
-public class StyleKit {
     
     let stylist: Stylist
+public final class StyleKit {
     
     public init?(fileUrl: URL, styleParser: StyleParsable? = nil, moduleName: String? = nil, logLevel: SKLogLevel = .error) {
         let log = SKLogger.defaultInstance()

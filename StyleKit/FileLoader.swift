@@ -1,6 +1,6 @@
 import Foundation
 
-class FileLoader {
+final class FileLoader {
     
     private let jsonFile: URL
     
