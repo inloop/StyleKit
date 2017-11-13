@@ -11,11 +11,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         if let styleFile = Bundle.main.url(forResource: "style", withExtension: "json") {
             
-            // Uses style parser within demo app
-            //StyleKit(fileUrl: styleFile, styleParser: StyleParser())?.apply()
+            let config = StyleKitConfig(styleFile) {
+                    $0.logLevel = .debug
+                    $0.moduleName = "StyleKitDemo"
+                    $0.watchForChanges = true
+                }
             
             // Uses default style parser
-            StyleKit(fileUrl: styleFile, moduleName: "StyleKitDemo", logLevel: .debug)?.apply()
+            StyleKit(config)?.apply()
             
         }
         return true
