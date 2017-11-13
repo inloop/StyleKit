@@ -1,36 +1,45 @@
 import Foundation
 
-class Stylist {
-    
-    typealias Style = [String:AnyObject]
-    typealias setValueForControlState = @convention(c) (AnyObject, Selector, AnyObject, UInt) -> Void
-    
-    let data: Style
-    let aliases: Style
-    let styleParser: StyleParsable
-    let moduleName: String?
-    var currentComponent: AnyClass?
-    var viewStack = [UIAppearanceContainer.Type]()
-    
-    init(data: Style, styleParser: StyleParsable?, moduleName: String?) {
-        self.styleParser = styleParser ?? StyleParser()
-        
-        var tmpAlias = Style()
-        var tmpData = Style()
-        
-        for (key, value) in data {
+private extension Dictionary where Key == String, Value: AnyObject {
+    typealias StyleSegments = (aliases: Stylist.Style, data: Stylist.Style)
+
+    var segments: StyleSegments {
+        var tmpAlias = Stylist.Style()
+        var tmpData = Stylist.Style()
+        for (key, value) in self {
             if key.hasPrefix("@") {
                 tmpAlias[key] = value
             } else {
                 tmpData[key] = value
             }
         }
-        
-        self.data = tmpData
-        self.aliases = tmpAlias
+        return (tmpAlias, tmpData)
+    }
+}
+
+final class Stylist {
+    
+    typealias Style = [String: AnyObject]
+    typealias setValueForControlState = @convention(c) (AnyObject, Selector, AnyObject, UInt) -> Void
+    
+    private var data: Style
+    private let styleParser: StyleParsable
+    private let moduleName: String?
+    private var aliases: Style
+    private var currentComponent: AnyClass?
+    private var viewStack = [UIAppearanceContainer.Type]()
+    
+    init(style: Style, styleParser: StyleParsable?, moduleName: String?) {
+        self.styleParser = styleParser ?? StyleParser()
+        (aliases, data) = style.segments
         self.moduleName = moduleName
     }
-    
+
+    func apply(style: Style) {
+        (aliases, data) = style.segments
+        apply()
+    }
+
     func apply() {
         SKTryCatch.try( {
             self.validateAndApply(self.data)

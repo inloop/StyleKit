@@ -1,30 +1,63 @@
 import Foundation
 
-public class StyleKit {
+public final class StyleKitConfig {
+    let fileURL: URL
+    public var styleParser: StyleParsable? = nil
+    public var moduleName: String? = nil
+    public var logLevel: SKLogLevel = .error
+    public var watchForChanges = false
+
+    public init(_ fileURL: URL, builder: (StyleKitConfig) -> ()) {
+        self.fileURL = fileURL
+        builder(self)
+    }
+}
+
+public final class StyleKit: NSObject {
+    private var stylist: Stylist
+    private let fileURL: URL
     
-    let stylist: Stylist
-    
-    public init?(fileUrl: URL, styleParser: StyleParsable? = nil, moduleName: String? = nil, logLevel: SKLogLevel = .error) {
-        let log = SKLogger.defaultInstance()
-        log.setup(logLevel,
-                  showLogIdentifier: false,
-                  showFunctionName: true,
-                  showThreadName: true,
-                  showSKLogLevel: true,
-                  showFileNames: true,
-                  showLineNumbers: true,
-                  showDate: false)
-        
-        let fileLoader = FileLoader.init(fileUrl: fileUrl)
-        if let data = fileLoader.load() {
-            self.stylist = Stylist.init(data: data, styleParser: styleParser, moduleName: moduleName)
-        } else {
-            return nil
+    public init?(_ config: StyleKitConfig) {
+        SKLogger.shared.setup(config.logLevel, showThreadName: true)
+        guard let style = FileLoader.load(config.fileURL) else { return nil }
+        fileURL = config.fileURL
+        stylist = Stylist(style: style, styleParser: config.styleParser, moduleName: config.moduleName)
+
+        super.init()
+
+        if config.watchForChanges {
+            NSFileCoordinator.addFilePresenter(self)
+            SKLogger.debug("edit: \(config.fileURL.description)")
         }
     }
     
     public func apply() {
         self.stylist.apply()
     }
-    
+}
+
+extension StyleKit: NSFilePresenter {
+    public var presentedItemURL: URL? {
+        return fileURL
+    }
+
+    public var presentedItemOperationQueue: OperationQueue {
+        return .main
+    }
+
+    public func presentedItemDidChange() {
+        SKLogger.debug("reloading...")
+        guard let data = FileLoader.load(fileURL) else { return }
+        stylist.apply(style: data)
+        reloadWindows()
+    }
+
+    private func reloadWindows() {
+        for window in UIApplication.shared.windows {
+            for view in window.subviews {
+                view.removeFromSuperview()
+                window.addSubview(view)
+            }
+        }
+    }
 }
