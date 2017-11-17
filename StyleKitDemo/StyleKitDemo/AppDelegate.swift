@@ -14,7 +14,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let config = StyleKitConfig(styleFile) {
                     $0.logLevel = .debug
                     $0.moduleName = "StyleKitDemo"
-                    $0.watchForChanges = true
                 }
             
             // Uses default style parser

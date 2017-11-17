@@ -5,7 +5,6 @@ public final class StyleKitConfig {
     public var styleParser: StyleParsable? = nil
     public var moduleName: String? = nil
     public var logLevel: SKLogLevel = .error
-    public var watchForChanges = false
 
     public init(_ fileURL: URL, builder: (StyleKitConfig) -> ()) {
         self.fileURL = fileURL
@@ -15,47 +14,37 @@ public final class StyleKitConfig {
 
 public final class StyleKit: NSObject {
     private var stylist: Stylist
-    private let fileURL: URL
+
+    public convenience init?(fileUrl: URL) {
+        let config = StyleKitConfig(fileUrl, builder: { _ in })
+        self.init(config)
+    }
     
     public init?(_ config: StyleKitConfig) {
         SKLogger.shared.setup(config.logLevel, showThreadName: true)
         guard let style = FileLoader.load(config.fileURL) else { return nil }
-        fileURL = config.fileURL
         stylist = Stylist(style: style, styleParser: config.styleParser, moduleName: config.moduleName)
-
         super.init()
-
-        if config.watchForChanges {
-            NSFileCoordinator.addFilePresenter(self)
-            SKLogger.debug("edit: \(config.fileURL.description)")
-        }
     }
     
     public func apply() {
         self.stylist.apply()
     }
-}
 
-extension StyleKit: NSFilePresenter {
-    public var presentedItemURL: URL? {
-        return fileURL
-    }
-
-    public var presentedItemOperationQueue: OperationQueue {
-        return .main
-    }
-
-    public func presentedItemDidChange() {
-        SKLogger.debug("reloading...")
-        guard let data = FileLoader.load(fileURL) else { return }
-        stylist.apply(style: data)
+    public func applyStyle(data: Data) {
+        guard let style = FileLoader.load(data) else { return }
+        stylist.apply(style: style)
         reloadWindows()
     }
+}
 
+extension StyleKit {
     private func reloadWindows() {
         for window in UIApplication.shared.windows {
             for view in window.subviews {
                 view.removeFromSuperview()
+                view.setNeedsLayout()
+                view.setNeedsDisplay()
                 window.addSubview(view)
             }
         }
